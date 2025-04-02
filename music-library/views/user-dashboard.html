@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - GrooveOn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a, #2d3436);
+            min-height: 100vh;
+            color: white;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #00b4d8;
+            font-size: 2.5rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #00b4d8;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #00ff88;
+            color: #1a1a1a;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .album-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .album-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .album-title {
+            font-size: 1.8rem;
+            color: #00b4d8;
+        }
+
+        .artist-name {
+            font-style: italic;
+            color: #cccccc;
+            margin-left: 0.5rem;
+        }
+
+        .album-genre {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(0, 255, 136, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .song-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .song-item {
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .action-buttons {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .favorited {
+            color: gold;
+            text-shadow: 0 0 5px gold;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Browse Albums</h1>
+            <div>
+                <a href="favorites.html" class="btn btn-secondary">View Favorites</a>
+                <a href="/logout" class="btn btn-danger">Logout</a>
+            </div>
+        </header>
+
+        <div id="albums-container">
+            <!-- Albums will be loaded here dynamically -->
+            <div class="empty-message">Loading albums...</div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="user-dashboard.html" class="btn btn-primary">Refresh</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Load all albums
+                const response = await fetch('/api/albums');
+                if (!response.ok) {
+                    window.location.href = '/user-login';
+                    return;
+                }
+                
+                const albums = await response.json();
+                
+                // Load user's favorites
+                const favResponse = await fetch('/api/favorites');
+                if (!favResponse.ok) {
+                    window.location.href = '/user-login';
+                    return;
+                }
+                
+                const favorites = await favResponse.json();
+                const favoriteIds = favorites.map(fav => fav.song_id);
+                
+                const container = document.getElementById('albums-container');
+                
+                if (albums.length === 0) {
+                    container.innerHTML = '<div class="empty-message">No albums available</div>';
+                    return;
+                }
+                
+                container.innerHTML = albums.map(album => `
+                    <div class="album-card">
+                        <div class="album-header">
+                            <div>
+                                <span class="album-title">${album.name}</span>
+                                <span class="artist-name">by ${album.artist_name}</span>
+                            </div>
+                            <span class="album-genre">${album.genre}</span>
+                        </div>
+                        <ul class="song-list">
+                            ${album.songs.map(song => `
+                                <li class="song-item">
+                                    <span>${song.name}</span>
+                                    <button class="favorite-btn ${favoriteIds.includes(song.id) ? 'favorited' : ''}" 
+                                            data-song-id="${song.id}">★</button>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+
+                // Add favorite button event listeners
+                document.querySelectorAll('.favorite-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const songId = e.target.getAttribute('data-song-id');
+                        const isFavorited = e.target.classList.contains('favorited');
+                        
+                        try {
+                            if (isFavorited) {
+                                // Remove from favorites
+                                const response = await fetch(`/api/favorites/${songId}`, {
+                                    method: 'DELETE'
+                                });
+                                
+                                if (response.ok) {
+                                    e.target.classList.remove('favorited');
+                                } else {
+                                    alert('Failed to remove favorite');
+                                }
+                            } else {
+                                // Add to favorites
+                                const response = await fetch('/api/favorites', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ song_id: songId })
+                                });
+                                
+                                if (response.ok) {
+                                    e.target.classList.add('favorited');
+                                } else {
+                                    alert('Failed to add favorite');
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error updating favorites:', err);
+                            alert('Failed to update favorites');
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error('Error loading albums:', err);
+                window.location.href = '/user-login';
+            }
+        });
+    </script>
+</body>
+</html>

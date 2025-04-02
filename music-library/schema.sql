@@ -1,0 +1,30 @@
+CREATE TABLE artists (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE albums (
+  id SERIAL PRIMARY KEY,
+  artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+  name VARCHAR(100) NOT NULL,
+  genre VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE songs (
+  id SERIAL PRIMARY KEY,
+  album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
+  name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE favorites (
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  song_id INTEGER REFERENCES songs(id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, song_id)
+);

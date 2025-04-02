@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Album - GrooveOn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a, #2d3436);
+            min-height: 100vh;
+            color: white;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #00ff88;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #cccccc;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .song-fields {
+            margin-top: 1rem;
+        }
+
+        .song-input {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .song-input input {
+            flex-grow: 1;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #00ff88;
+            color: #1a1a1a;
+        }
+
+        .btn-secondary {
+            background: #00b4d8;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .error-message {
+            color: #ff4757;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create New Album</h1>
+        
+        <form id="album-form">
+            <div class="form-group">
+                <label for="album-name">Album Name</label>
+                <input type="text" id="album-name" required>
+                <div id="album-name-error" class="error-message"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="genre">Genre</label>
+                <select id="genre" required>
+                    <option value="">Select Genre</option>
+                    <option value="Rock">Rock</option>
+                    <option value="Pop">Pop</option>
+                    <option value="Hip Hop">Hip Hop</option>
+                    <option value="Electronic">Electronic</option>
+                    <option value="Jazz">Jazz</option>
+                    <option value="Classical">Classical</option>
+                    <option value="Country">Country</option>
+                    <option value="R&B">R&B</option>
+                </select>
+                <div id="genre-error" class="error-message"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Songs</label>
+                <div id="song-fields" class="song-fields">
+                    <div class="song-input">
+                        <input type="text" placeholder="Song name" class="song-name" required>
+                        <button type="button" class="btn btn-secondary remove-song">-</button>
+                    </div>
+                </div>
+                <div id="songs-error" class="error-message"></div>
+                <button type="button" id="add-song" class="btn btn-secondary">Add Another Song</button>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="/artist-dashboard" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Album</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add song field
+            document.getElementById('add-song').addEventListener('click', () => {
+                const songFields = document.getElementById('song-fields');
+                const newField = document.createElement('div');
+                newField.className = 'song-input';
+                newField.innerHTML = `
+                    <input type="text" placeholder="Song name" class="song-name" required>
+                    <button type="button" class="btn btn-secondary remove-song">-</button>
+                `;
+                songFields.appendChild(newField);
+            });
+
+            // Remove song field
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-song')) {
+                    if (document.querySelectorAll('.song-input').length > 1) {
+                        e.target.closest('.song-input').remove();
+                    } else {
+                        alert('You need at least one song');
+                    }
+                }
+            });
+
+            // Clear error messages
+            function clearErrors() {
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.textContent = '';
+                });
+            }
+
+            // Form submission
+            document.getElementById('album-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                clearErrors();
+                
+                const album = {
+                    name: document.getElementById('album-name').value,
+                    genre: document.getElementById('genre').value,
+                    songs: Array.from(document.querySelectorAll('.song-name')).map(input => input.value)
+                };
+
+                // Basic validation
+                let isValid = true;
+                if (!album.name) {
+                    document.getElementById('album-name-error').textContent = 'Album name is required';
+                    isValid = false;
+                }
+                if (!album.genre) {
+                    document.getElementById('genre-error').textContent = 'Genre is required';
+                    isValid = false;
+                }
+                if (album.songs.some(song => !song)) {
+                    document.getElementById('songs-error').textContent = 'All songs must have names';
+                    isValid = false;
+                }
+                if (!isValid) return;
+
+                try {
+                    const response = await fetch('/api/albums', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(album)
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/artist-dashboard';
+                    } else {
+                        const error = await response.json();
+                        alert(error.message || 'Failed to create album');
+                    }
+                } catch (err) {
+                    console.error('Error:', err);
+                    alert('An error occurred while creating the album');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

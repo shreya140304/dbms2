@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Dashboard - GrooveOn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a, #2d3436);
+            min-height: 100vh;
+            color: white;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #00ff88;
+            font-size: 2.5rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 1rem;
+        }
+
+        .btn-primary {
+            background: #00ff88;
+            color: #1a1a1a;
+        }
+
+        .btn-secondary {
+            background: #00b4d8;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .album-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .album-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .album-title {
+            font-size: 1.8rem;
+            color: #00ff88;
+        }
+
+        .album-genre {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(0, 180, 216, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .song-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .song-item {
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .action-buttons {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Your Albums</h1>
+            <a href="/logout" class="btn btn-danger">Logout</a>
+        </header>
+
+        <div id="albums-container">
+            <!-- Albums will be loaded here dynamically -->
+            <div class="album-card">
+                <div class="album-header">
+                    <h2 class="album-title">Sample Album</h2>
+                    <span class="album-genre">Rock</span>
+                    <button class="btn btn-danger delete-album" data-id="1">Delete</button>
+                </div>
+                <ul class="song-list">
+                    <li class="song-item">
+                        <span>Song 1</span>
+                    </li>
+                    <li class="song-item">
+                        <span>Song 2</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="new-album.html" class="btn btn-primary">Create New Album</a>
+            <a href="artist-dashboard.html" class="btn btn-secondary">Refresh List</a>
+        </div>
+    </div>
+
+    <script>
+        // Load artist's albums
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/artist/albums');
+                if (!response.ok) {
+                    window.location.href = '/artist-login';
+                    return;
+                }
+                
+                const albums = await response.json();
+                
+                const container = document.getElementById('albums-container');
+                container.innerHTML = '';
+                
+                if (albums.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem;">No albums yet</div>';
+                    return;
+                }
+                
+                albums.forEach(album => {
+                    const albumEl = document.createElement('div');
+                    albumEl.className = 'album-card';
+                    albumEl.innerHTML = `
+                        <div class="album-header">
+                            <h2 class="album-title">${album.name}</h2>
+                            <span class="album-genre">${album.genre}</span>
+                            <button class="btn btn-danger delete-album" data-id="${album.id}">Delete</button>
+                        </div>
+                        <ul class="song-list">
+                            ${album.songs.map(song => `
+                                <li class="song-item">
+                                    <span>${song.name}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                    container.appendChild(albumEl);
+                });
+
+                // Add delete event listeners
+                document.querySelectorAll('.delete-album').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if (confirm('Are you sure you want to delete this album?')) {
+                            const albumId = e.target.getAttribute('data-id');
+                            const response = await fetch(`/api/albums/${albumId}`, {
+                                method: 'DELETE'
+                            });
+                            
+                            if (response.ok) {
+                                e.target.closest('.album-card').remove();
+                            } else {
+                                alert('Failed to delete album');
+                            }
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error('Error loading albums:', err);
+                window.location.href = '/artist-login';
+            }
+        });
+    </script>
+</body>
+</html>
